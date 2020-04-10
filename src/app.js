@@ -10,6 +10,24 @@ app.use(cors());
 
 const repositories = [];
 
+function checkRepository(request, response, next) {
+  const { id } = request.params;
+
+  const repositoryIndex = repositories.findIndex(repository =>
+    repository.id === id
+  );
+
+  if (repositoryIndex < 0) {
+    return response.status(400).json({
+      error: 'Repository does not exists.'
+    });
+  }
+
+  return next();
+}
+
+app.use("/repositories/:id", checkRepository);
+
 app.get("/repositories", (request, response) => {
   return response.json(repositories);
 });
@@ -38,12 +56,6 @@ app.put("/repositories/:id", (request, response) => {
     repository.id === id
   );
 
-  if (repositoryIndex < 0) {
-    return response.status(400).json({
-      error: 'Repository does not exists.'
-    });
-  }
-
   const repository = {
     id,
     title,
@@ -64,13 +76,7 @@ app.delete("/repositories/:id", (request, response) => {
     repository.id === id
   );
 
-  if (repositoryIndex >= 0) {
-    repositories.splice(repositoryIndex, 1);
-  } else {
-    return response.status(400).json({
-      error: 'Repository does not exists.'
-    });
-  }
+  repositories.splice(repositoryIndex, 1);
 
   return response.status(204).send();
 });
@@ -82,13 +88,7 @@ app.post("/repositories/:id/like", (request, response) => {
     repository.id === id
   );
 
-  if (repository) {
-    repository.likes++;
-  } else {
-    return response.status(400).json({
-      error: 'Repository does not exists.'
-    });
-  }
+  repository.likes++;
 
   return response.json(repository);
 });
